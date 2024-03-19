@@ -1,0 +1,23 @@
+---
+title: "Devoir 2"
+author: "Votre noms d'équipe"
+date: "13/03/2024"
+output: html_document
+---
+
+## Question 3 (10 points)  
+
+Comparer 3 itérations du modèle de métapopulation stochastiques avec le modèle de métapopulation déterministique pour $c=2$, $e=1$ $N_{ini}=1$ et
+$N\in\{100,1000,10000, 100000\}$.  Présenter vos résultats dans des graphiques où chaque figure est définit par une valeur différente de $N$.
+
+***
+
+### Résultat pour $N=100$
+
+### Résultat pour $N=1000$
+
+### Résultat pour $N=10000$
+
+### Résultat pour $N=100000$
+
+***

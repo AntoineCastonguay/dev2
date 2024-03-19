@@ -1,0 +1,13 @@
+---
+title: "Devoir 2"
+author: "Votre noms d'équipe"
+date: "13/03/2024"
+output: html_document
+---
+
+## Question 4 (2 points)
+
+Expliquer brièvement comment la taille de la population totale ($N$) influence la dynamique stochastique du modèle de métapopulation.  
+
+
+***

@@ -1,0 +1,113 @@
+---
+title: "Devoir 2"
+author: "Votre noms d'équipe"
+date: "13/03/2024"
+output: html_document
+---
+
+## Question 1 
+### Mise en contexte
+
+Vous êtes impliqué dans un projet dont l'intérêt est d'étudier comment deux espèces bactériennes interagissent entre elles dans un environnement hautement contrôlé (c'est-à-dire une boîte de Petri). Au début de l'expérience, 25 individus de l'espèce *bogustonia proii* et 20 individus de l'espèce *aleastonia predatora* ont été inoculés dans la boîte de Petri. Pendant l'expérience, les individus de chaque espèce ont été comptés indépendamment toutes les heures pendant deux semaines (beaucoup d'efforts et de nuits blanches ont été nécessaires pour ce projet).  
+
+Les données qui ont été recueillies pendant ces deux semaines sont disponibles dans le fichier `2Bacteries.csv`.
+
+Un chercheur impliqué dans le projet pense que la relation entre les deux espèces bactériennes est une relation consommateur-ressource, mais il n'est pas certain de comment construire un modèle pour tester cette hypothèse. Comme il y a plusieurs façons de construire un modèle consommateur-ressource, proposer un modèle consommateur-ressource qui vous permettra de mieux caractériser la dynamique entre les deux espèces. 
+
+*Indice :* Un des chercheurs de l'équipe qui connait très bien l'espèce *bogustonia proii* a remarqué que dans une expérience similaire qui n'a durée que 5 jours, le taux de croissance de cette espèce n'était pas constant. Plus il y avait d'individu moins le taux de croissance était élevé.
+
+### 2 points
+
+a) Présenter le modèle que vous souhaitez utiliser. Assurez-vous de bien définir la notation pour le modèle.
+
+***
+
+### 8 points
+
+b) Implémentez le modèle que vous considérez le plus approprié dans R en utilisant les techniques apprises en cours et essayez une série de valeurs différentes pour trouver les meilleures paramètres. Utilisez la corrélation de Pearson pour trouver les paramètres qui correspondent le mieux aux données.
+
+```{r}
+#librairie
+library(deSolve)
+
+bact <- read.csv("~/R_projet/BIO401/2Bactéries.csv")
+
+# Créer un nouveau graphique avec la première ligne
+plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "blue", 
+     xlab = "Temps", ylab = "Données", main = "Graphique avec deux lignes")
+
+# Ajouter la deuxième ligne
+lines(x = bact$temps, y = bact$aleastonia_predatora, col = "red")
+
+C_RVector <- function(t, vars, parms){
+  with(as.list(c(parms, vars)), {
+    # Modèle consommateur ressoure
+    dR <- alpha*R - beta*R*C # dR/dt
+    dC <- gamma*R*C - sigma*C  # dC/dt
+    
+    # Résultat
+    res <- c(dR=dR, dC=dC)
+    return(list(res))
+  })
+}
+
+dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(alpha=0.5,beta=0.02,gamma=0.005,sigma=0.75)) {
+  soln <- ode(ic, times, func, parms)
+  
+  correlation_R <- cor(bact$bogustonia_proii, soln[,"R"])
+  correlation_C <- cor(bact$aleastonia_predatora, soln[,"C"])
+  
+  if(correlation_C > 0.5 & correlation_R > 0.5){
+    print(paste("Ressource :",correlation_R))
+    print(paste("Consomateur :",correlation_C))
+    
+    plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
+         xlab = "Temps", ylab = "Données", 
+         main = paste(correlation_R,
+                      correlation_C,
+                      parms[1],
+                      parms[2],
+                      parms[3],
+                      parms[4]))
+    
+    # Ajouter la deuxième ligne
+    lines(x = times, y = soln[,"C"], col = "red")
+  }
+  
+}
+# LEtemps <- seq(0.1,1,by=0.1)
+# for (a in seq(0.4,1,by=0.1)) {
+#   for (b in LEtemps) {
+#     for (g in LEtemps) {
+#       for (s in LEtemps) {
+#         try(dessinSol(parms = c(alpha=a,beta=b,gamma=g,sigma=s)))
+#       }
+#     }
+#   }
+# }
+dessinSol(parms = c(alpha=0.4,beta=0.3,gamma=0.1,sigma=0.9))
+# 0.4 0.2 0.2 0.9
+# 0.4 0.3 0.1 0.9
+# 0.5 0.3 0.1 0.7
+# 0.6 0.2 0.2 0.6
+# 0.7 0.1 0.4 0.7
+# 0.9 0.2 0.1 0.3
+
+```
+
+
+***
+
+### 1 point
+
+c) Même si vous n'obtenez pas un modèle qui s'adapte très bien aux données, expliquez brièvement comment vous pensez que les différents modèles que vous obtenez peuvent aider à rejeter (ou non) l'hypothèse proposée par ce chercheur.
+
+***
+
+### 1 point
+
+d) Après avoir étudié les données en utilisant le modèle ressource-consommateur à la question précédent, proposez une nouvelle expérience qui aiderait à donner des réponses plus précises sur les facteurs générant le comportement périodique trouvé pour les deux espèces bactériennes.
+
+Assurez-vous que l'expérience puisse être réalisée dans un délai raisonnable (au maximum 2 semaines).
+
+***
