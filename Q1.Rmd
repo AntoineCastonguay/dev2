@@ -34,7 +34,7 @@ bact <- read.csv("~/R_projet/BIO401/2Bactéries.csv")
 
 # Créer un nouveau graphique avec la première ligne
 plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "blue", 
-     xlab = "Temps", ylab = "Données", main = "Graphique avec deux lignes")
+     xlab = "Temps", ylab = "Données", main = "Graphique avec deux lignes");
 
 # Ajouter la deuxième ligne
 lines(x = bact$temps, y = bact$aleastonia_predatora, col = "red")
@@ -42,7 +42,7 @@ lines(x = bact$temps, y = bact$aleastonia_predatora, col = "red")
 C_RVector <- function(t, vars, parms){
   with(as.list(c(parms, vars)), {
     # Modèle consommateur ressoure
-    dR <- alpha*R - beta*R*C # dR/dt
+    dR <- alpha*R*(1-R/40) - beta*R*C # dR/dt
     dC <- gamma*R*C - sigma*C  # dC/dt
     
     # Résultat
@@ -53,7 +53,7 @@ C_RVector <- function(t, vars, parms){
 
 dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(alpha=0.5,beta=0.02,gamma=0.005,sigma=0.75)) {
   soln <- ode(ic, times, func, parms)
-  
+  ?cor
   correlation_R <- cor(bact$bogustonia_proii, soln[,"R"])
   correlation_C <- cor(bact$aleastonia_predatora, soln[,"C"])
   
@@ -63,20 +63,38 @@ dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(
     
     plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
          xlab = "Temps", ylab = "Données", 
-         main = paste(correlation_R,
-                      correlation_C,
-                      parms[1],
-                      parms[2],
-                      parms[3],
-                      parms[4]))
+         main = paste("R", round(correlation_R,3),
+                      "C", round(correlation_C,3),
+                      "a", parms[1],
+                      "b", parms[2],
+                      "g", parms[3],
+                      "s", parms[4]))
     
     # Ajouter la deuxième ligne
     lines(x = times, y = soln[,"C"], col = "red")
+    
+  }else{
+    print(paste("Ressource :",correlation_R))
+    print(paste("Consomateur :",correlation_C))
+    
+    plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
+         xlab = "Temps", ylab = "Données", 
+         main = paste("R", round(correlation_R,3),
+                      "C", round(correlation_C,3),
+                      "a", parms[1],
+                      "b", parms[2],
+                      "g", parms[3],
+                      "s", parms[4]))
+    
+    # Ajouter la deuxième ligne
+    lines(x = times, y = soln[,"C"], col = "red")
+    lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
+    lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
   }
   
 }
 # LEtemps <- seq(0.1,1,by=0.1)
-# for (a in seq(0.4,1,by=0.1)) {
+# for (a in LEtemps) {
 #   for (b in LEtemps) {
 #     for (g in LEtemps) {
 #       for (s in LEtemps) {
@@ -85,13 +103,21 @@ dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(
 #     }
 #   }
 # }
-dessinSol(parms = c(alpha=0.4,beta=0.3,gamma=0.1,sigma=0.9))
 # 0.4 0.2 0.2 0.9
 # 0.4 0.3 0.1 0.9
 # 0.5 0.3 0.1 0.7
 # 0.6 0.2 0.2 0.6
 # 0.7 0.1 0.4 0.7
 # 0.9 0.2 0.1 0.3
+
+# for (i in seq(0.4,0.6,by = 0.01)) {
+#   try(dessinSol(parms = c(alpha=i,beta=i/2,gamma=i/3,sigma=i)))
+# }
+# 0.31 0.155 0.155 0.93
+
+# best res
+dessinSol(parms = c(alpha=0.31,beta=0.156,gamma=0.157*0.8,sigma=0.931))
+dessinSol(parms = c(alpha=0.2,beta=0.02,gamma=0.04,sigma=0.42))
 
 ```
 
