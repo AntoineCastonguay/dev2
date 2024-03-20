@@ -42,6 +42,18 @@ lines(x = bact$temps, y = bact$aleastonia_predatora, col = "red")
 C_RVector <- function(t, vars, parms){
   with(as.list(c(parms, vars)), {
     # Modèle consommateur ressoure
+    dR <- alpha*R - beta*R*C # dR/dt
+    dC <- gamma*R*C - sigma*C  # dC/dt
+    
+    # Résultat
+    res <- c(dR=dR, dC=dC)
+    return(list(res))
+  })
+}
+
+C_RVector2 <- function(t, vars, parms){
+  with(as.list(c(parms, vars)), {
+    # Modèle consommateur ressoure
     dR <- alpha*R*(1-R/40) - beta*R*C # dR/dt
     dC <- gamma*R*C - sigma*C  # dC/dt
     
@@ -57,40 +69,23 @@ dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(
   correlation_R <- cor(bact$bogustonia_proii, soln[,"R"])
   correlation_C <- cor(bact$aleastonia_predatora, soln[,"C"])
   
-  if(correlation_C > 0.5 & correlation_R > 0.5){
-    print(paste("Ressource :",correlation_R))
-    print(paste("Consomateur :",correlation_C))
-    
-    plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
-         xlab = "Temps", ylab = "Données", 
-         main = paste("R", round(correlation_R,3),
-                      "C", round(correlation_C,3),
-                      "a", parms[1],
-                      "b", parms[2],
-                      "g", parms[3],
-                      "s", parms[4]))
-    
-    # Ajouter la deuxième ligne
-    lines(x = times, y = soln[,"C"], col = "red")
-    
-  }else{
-    print(paste("Ressource :",correlation_R))
-    print(paste("Consomateur :",correlation_C))
-    
-    plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
-         xlab = "Temps", ylab = "Données", 
-         main = paste("R", round(correlation_R,3),
-                      "C", round(correlation_C,3),
-                      "a", parms[1],
-                      "b", parms[2],
-                      "g", parms[3],
-                      "s", parms[4]))
-    
-    # Ajouter la deuxième ligne
-    lines(x = times, y = soln[,"C"], col = "red")
-    lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
-    lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
-  }
+  #if(correlation_C > 0.5 & correlation_R > 0.5)
+  print(paste("Ressource :",correlation_R))
+  print(paste("Consomateur :",correlation_C))
+  
+  plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
+       xlab = "Temps", ylab = "Données", 
+       main = paste("R", round(correlation_R,3),
+                    "C", round(correlation_C,3),
+                    "a", parms[1],
+                    "b", parms[2],
+                    "g", parms[3],
+                    "s", parms[4]))
+  
+  # Ajouter la deuxième ligne
+  lines(x = times, y = soln[,"C"], col = "red")
+  lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
+  lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
   
 }
 # LEtemps <- seq(0.1,1,by=0.1)
@@ -116,8 +111,9 @@ dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(
 # 0.31 0.155 0.155 0.93
 
 # best res
-dessinSol(parms = c(alpha=0.31,beta=0.156,gamma=0.157*0.8,sigma=0.931))
-dessinSol(parms = c(alpha=0.2,beta=0.02,gamma=0.04,sigma=0.42))
+dessinSol(parms = c(alpha=0.31,beta=0.156,gamma=0.157,sigma=0.931))
+dessinSol(parms = c(alpha=0.2,beta=0.02,gamma=0.04,sigma=0.42),func = C_RVector2)
+dessinSol(parms = c(alpha=0.35,beta=0.12,gamma=0.12,sigma=0.45),func = C_RVector2)
 
 ```
 
@@ -127,6 +123,7 @@ dessinSol(parms = c(alpha=0.2,beta=0.02,gamma=0.04,sigma=0.42))
 ### 1 point
 
 c) Même si vous n'obtenez pas un modèle qui s'adapte très bien aux données, expliquez brièvement comment vous pensez que les différents modèles que vous obtenez peuvent aider à rejeter (ou non) l'hypothèse proposée par ce chercheur.
+
 
 ***
 
