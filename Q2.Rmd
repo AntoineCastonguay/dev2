@@ -22,4 +22,72 @@ Indice : il faut utiliser une boucle `while`.
 
 Note : N'oubliez pas de commenter votre code.
 
+```{r}
+metapopGill <- function (col, ext, N, Nini, tmax){
+  
+  #on définit l'équilibre théorique
+  theo <- (1- ext/col)*N
+  
+  #On définit le nombre de parcelles colonisées
+  Nocc <- Nini
+  
+  #On définit le nombre de parcelles non-occupées
+  Nabs <- N - Nini
+  
+  t <- 0
+  tevol <- 0
+  Nevol <- Nini
+  while (t<tmax){
+    
+    #on définit le vecteur avec les taux d'évènements
+    a <- c(col*Nocc/N*Nabs/N, ext*Nocc/N)
+    
+    #on définit le taux global d'évènement
+    a0 <- sum(a)
+    
+    #on définit u stochastiquement
+    u <- runif(1)
+    
+    #on calcule le temps t au prochain évènement
+    te <- 1/a0 *log(1/u)
+    t <- t+te
+    
+    #on détermine stochastiquement quel évènement se produira
+    e <- runif(1,0,a0)
+    
+    if (e<a[1]){ #si c'est colonisation
+      Nocc <- Nocc+1
+      Nabs <- Nabs-1
+    } else { #si c'est extinction
+      Nabs <- Nabs+1
+      Nocc <- Nocc-1
+    }
+    
+    #On crée des vecteurs pour contenir l'évolution des valeurs de t et de Nocc
+    Nevol <- c(Nevol,Nocc)
+    tevol <- c(tevol,t)
+    
+  }
+  
+  #pour obtenir une approximation de la valeur vers laquelle la courbe converge,
+  #on fait la moyenne des 25 derniers % des données
+  pas <- length(Nevol)
+  fin <- round(pas*0.25,0)
+  tendance <- round(mean(tail(Nevol,fin)))
+  
+  #on fait un plot avec les séries de données
+  plot(tevol,Nevol/N,type = "l",
+       xlab="t",
+       ylab="Proportion des parcelles occupées")
+  
+  #on définit une phrase qui résume la tendance ainsi que l'équilibre estimé
+  res<-paste(c("la fonction tend vers ",tendance," parcelles occupées, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
+             collapse = "")
+  return(res)
+}
+
+#un exemple
+metapopGill(3.3,1.4,1000,200,10000)
+```
+
 ***
