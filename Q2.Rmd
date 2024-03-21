@@ -34,60 +34,82 @@ metapopGill <- function (col, ext, N, Nini, tmax){
   #On définit le nombre de parcelles non-occupées
   Nabs <- N - Nini
   
+  #On initie les objets suivants pour le while
   t <- 0
   tevol <- 0
   Nevol <- Nini
-  while (t<tmax){
+  
+  #Cette boucle while roule tant que Nocc n'est pas nul et tant que t est sous tmax
+  while (t<=tmax & Nocc>0){
     
     #on définit le vecteur avec les taux d'évènements
-    a <- c(col*Nocc/N*Nabs/N, ext*Nocc/N)
+    a <- c(col*Nocc*(1-(Nocc/N)), ext*Nocc)
     
     #on définit le taux global d'évènement
     a0 <- sum(a)
     
-    #on définit u stochastiquement
-    u <- runif(1)
+    #On initie les objets suivants pour l'intérieur de la boucle d'un pas de temps
+    #temps depuis le début du pas de temps
+    tt <- 0
+    #nombre de colonisations pendant le pas de temps
+    cols <- 0
+    #nombre d'extinction pendant le pas de temps
+    exts <- 0
     
-    #on calcule le temps t au prochain évènement
-    te <- 1/a0 *log(1/u)
-    t <- t+te
-    
-    #on détermine stochastiquement quel évènement se produira
-    e <- runif(1,0,a0)
-    
-    if (e<a[1]){ #si c'est colonisation
-      Nocc <- Nocc+1
-      Nabs <- Nabs-1
-    } else { #si c'est extinction
-      Nabs <- Nabs+1
-      Nocc <- Nocc-1
+    #boucle qui roule pour effectuer tous les évènements dans le pas de temps
+    while(tt<1){
+      #on définit u stochastiquement
+      u <- runif(1)
+      
+      #on calcule le temps t au prochain évènement
+      te <- 1/a0 *log(1/u)
+      tt <- tt+te
+      
+      #on détermine stochastiquement quel évènement se produira
+      e <- runif(1,0,a0)
+      
+      #on détermine si c'est une colonisation ou une extinction et on ajuste cols et exts
+      if (e<a[1]){
+        cols <- cols + 1
+      } else {
+        exts <- exts + 1
+      }
     }
-    
-    #On crée des vecteurs pour contenir l'évolution des valeurs de t et de Nocc
+    #on met à jour Nocc avec les colonisations et les extinctions
+    Nocc <- Nocc + cols - exts
+    #on met à jour le temps
+    t <- t+1
+    #on ajoute à la série temporelle
     Nevol <- c(Nevol,Nocc)
     tevol <- c(tevol,t)
-    
   }
-  
-  #pour obtenir une approximation de la valeur vers laquelle la courbe converge,
-  #on fait la moyenne des 25 derniers % des données
-  pas <- length(Nevol)
-  fin <- round(pas*0.25,0)
-  tendance <- round(mean(tail(Nevol,fin)))
-  
-  #on fait un plot avec les séries de données
-  plot(tevol,Nevol/N,type = "l",
-       xlab="t",
-       ylab="Proportion des parcelles occupées")
-  
-  #on définit une phrase qui résume la tendance ainsi que l'équilibre estimé
-  res<-paste(c("la fonction tend vers ",tendance," parcelles occupées, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
-             collapse = "")
-  return(res)
+  #output si la population
+  if(Nocc>0){
+    pas <- length(Nevol)
+    fin <- round(pas*0.25,0)
+    tendance <- round(mean(tail(Nevol,fin)))
+    #}
+    data <- as.data.frame(cbind(tevol,Nevol/N))
+    plot(data[,1],data[,2],type = "l",
+         xlab="t",
+         ylab="Proportion des parcelles occupées")
+    res<-paste(c("la fonction tend vers ",tendance," parcelles occupées, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
+               collapse = "")
+    return(res)
+  } else {
+    data <- as.data.frame(cbind(tevol,Nevol/N))
+    print(length(tevol))
+    plot(data[,1],data[,2],type = "l",
+         xlab="t",
+         ylab="Proportion des parcelles occupées")
+    res<-paste(c("La métapopulation s'effondre, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
+               collapse = "")
+    return(res)
+  }
 }
 
 #un exemple
-metapopGill(3.3,1.4,1000,200,10000)
+metapopGill(3.3,1.4,1000,200,100)
 ```
 
 ***
