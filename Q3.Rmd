@@ -14,10 +14,27 @@ $N\in\{100,1000,10000, 100000\}$.  Présenter vos résultats dans des graphiques
 
 ### Résultat pour $N=100$
 
+```{r}
+metapopGill(2,1,100,1,100)
+```
+
+
 ### Résultat pour $N=1000$
+
+```{r}
+metapopGill(2,1,1000,1,100)
+```
 
 ### Résultat pour $N=10000$
 
+```{r}
+metapopGill(2,1,10000,1,100)
+```
+
 ### Résultat pour $N=100000$
+
+```{r}
+metapopGill(2,1,100000,1,100)
+```
 
 ***
