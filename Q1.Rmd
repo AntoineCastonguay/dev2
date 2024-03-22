@@ -54,7 +54,19 @@ C_RVector <- function(t, vars, parms){
 C_RVector2 <- function(t, vars, parms){
   with(as.list(c(parms, vars)), {
     # Modèle consommateur ressoure
-    dR <- alpha*R*(1-R/40) - beta*R*C # dR/dt
+    dR <- alpha*R*(1-R/1000) - beta*R*C # dR/dt
+    dC <- gamma*R*C - sigma*C  # dC/dt
+    
+    # Résultat
+    res <- c(dR=dR, dC=dC)
+    return(list(res))
+  })
+}
+
+C_RVector3 <- function(t, vars, parms){
+  with(as.list(c(parms, vars)), {
+    # Modèle consommateur ressoure
+    dR <- alpha*R*(1-R/1650) - beta*R*C # dR/dt
     dC <- gamma*R*C - sigma*C  # dC/dt
     
     # Résultat
@@ -112,8 +124,8 @@ dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(
 
 # best res
 dessinSol(parms = c(alpha=0.31,beta=0.156,gamma=0.157,sigma=0.931))
-dessinSol(parms = c(alpha=0.2,beta=0.02,gamma=0.04,sigma=0.42),func = C_RVector2)
-dessinSol(parms = c(alpha=0.35,beta=0.12,gamma=0.12,sigma=0.45),func = C_RVector2)
+dessinSol(parms = c(alpha=0.17,beta=0.0245,gamma=0.03,sigma=0.4),func = C_RVector2)
+dessinSol(parms = c(alpha=0.17,beta=0.0243,gamma=0.0295,sigma=0.401),func = C_RVector3)
 
 ```
 
