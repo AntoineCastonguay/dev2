@@ -20,6 +20,17 @@ Un chercheur impliqué dans le projet pense que la relation entre les deux espè
 
 a) Présenter le modèle que vous souhaitez utiliser. Assurez-vous de bien définir la notation pour le modèle.
 
+#### Modèle Lotka-Volterra entre l'espèce *bogustonia proii* et l'espèce *aleastonia predatora*  
+##### $\frac{dR}{dt} = \alpha R(t) (1 - \frac{R(t)}{K}) - \beta R(t)C(t)$  
+##### $\frac{dC}{dt} = \epsilon \beta R(t)C(t) - \delta C(t)$  
+$R(t)$ : Taille de la population de *bogustonia proii*  
+$C(t)$ : Taille de la population de *aleastonia predatora*  
+$\alpha$ : Taux de croissance de *bogustonia proii*  
+$K$  : Capacité maximale de support de l'environnement à *bogustonia proii*  
+$\beta$ : Coefficient de la force de l'interaction entre les populations  
+$\epsilon$ : Taux de transformation de la consommation d'une ressource en nouveau consommateur
+$\delta$ : Taux de mortalité de *aleastonia predatora*
+
 ***
 
 ### 8 points
@@ -33,29 +44,17 @@ library(deSolve)
 bact <- read.csv("~/R_projet/BIO401/2Bactéries.csv")
 
 # Créer un nouveau graphique avec la première ligne
-plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "blue", 
-     xlab = "Temps", ylab = "Données", main = "Graphique avec deux lignes");
+plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "green", 
+     xlab = "Temps", ylab = "Données", main = "Graphique avec deux lignes")
 
 # Ajouter la deuxième ligne
-lines(x = bact$temps, y = bact$aleastonia_predatora, col = "red")
+lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
 
 C_RVector <- function(t, vars, parms){
   with(as.list(c(parms, vars)), {
     # Modèle consommateur ressoure
-    dR <- alpha*R - beta*R*C # dR/dt
-    dC <- gamma*R*C - sigma*C  # dC/dt
-    
-    # Résultat
-    res <- c(dR=dR, dC=dC)
-    return(list(res))
-  })
-}
-
-C_RVector2 <- function(t, vars, parms){
-  with(as.list(c(parms, vars)), {
-    # Modèle consommateur ressoure
     dR <- alpha*R*(1-R/2000) - beta*R*C # dR/dt
-    dC <- gamma*R*C - sigma*C  # dC/dt
+    dC <- (epsilon*beta)*R*C - sigma*C  # dC/dt
     
     # Résultat
     res <- c(dR=dR, dC=dC)
@@ -63,69 +62,36 @@ C_RVector2 <- function(t, vars, parms){
   })
 }
 
-C_RVector3 <- function(t, vars, parms){
-  with(as.list(c(parms, vars)), {
-    # Modèle consommateur ressoure
-    dR <- alpha*R*(1-R/1750) - beta*R*C # dR/dt
-    dC <- gamma*R*C - sigma*C  # dC/dt
-    
-    # Résultat
-    res <- c(dR=dR, dC=dC)
-    return(list(res))
-  })
-}
-
-dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(alpha=0.5,beta=0.02,gamma=0.005,sigma=0.75)) {
+dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(alpha=0.4,beta=0.2,epsilon=1,sigma=0.91)) {
   soln <- ode(ic, times, func, parms)
-  ?cor
+  
   correlation_R <- cor(bact$bogustonia_proii, soln[,"R"])
   correlation_C <- cor(bact$aleastonia_predatora, soln[,"C"])
   
-  #if(correlation_C > 0.5 & correlation_R > 0.5)
-  print(paste("Ressource :",correlation_R))
-  print(paste("Consomateur :",correlation_C))
+  #if(correlation_C > 0.5 & correlation_R > 0.5){
+    print(paste("Ressource :",correlation_R))
+    print(paste("Consomateur :",correlation_C))
+    
+    plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
+         xlab = "Temps", ylab = "Données", 
+         main = paste("R", round(correlation_R,3),
+                      "C", round(correlation_C,3),
+                      "a", parms[1],
+                      "b", parms[2],
+                      "e", parms[3],
+                      "d", parms[4]))
+    
+    # Ajouter la deuxième ligne
+    lines(x = times, y = soln[,"C"], col = "red")
+    lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
+    lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
+  #}
   
-  plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
-       xlab = "Temps", ylab = "Données", 
-       main = paste("R", round(correlation_R,3),
-                    "C", round(correlation_C,3),
-                    "a", parms[1],
-                    "b", parms[2],
-                    "g", parms[3],
-                    "s", parms[4]))
-  
-  # Ajouter la deuxième ligne
-  lines(x = times, y = soln[,"C"], col = "red")
-  lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
-  lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
   
 }
-# LEtemps <- seq(0.1,1,by=0.1)
-# for (a in LEtemps) {
-#   for (b in LEtemps) {
-#     for (g in LEtemps) {
-#       for (s in LEtemps) {
-#         try(dessinSol(parms = c(alpha=a,beta=b,gamma=g,sigma=s)))
-#       }
-#     }
-#   }
-# }
-# 0.4 0.2 0.2 0.9
-# 0.4 0.3 0.1 0.9
-# 0.5 0.3 0.1 0.7
-# 0.6 0.2 0.2 0.6
-# 0.7 0.1 0.4 0.7
-# 0.9 0.2 0.1 0.3
-
-# for (i in seq(0.4,0.6,by = 0.01)) {
-#   try(dessinSol(parms = c(alpha=i,beta=i/2,gamma=i/3,sigma=i)))
-# }
-# 0.31 0.155 0.155 0.93
 
 # best res
-dessinSol(parms = c(alpha=0.31,beta=0.156,gamma=0.157,sigma=0.931))
-dessinSol(parms = c(alpha=0.17,beta=0.0242,gamma=0.0295,sigma=0.401),func = C_RVector3)
-dessinSol(parms = c(alpha=0.17,beta=0.0242,gamma=0.02928,sigma=0.401),func = C_RVector2)
+dessinSol(parms = c(alpha=0.17,beta=0.0242,epsilon=1.21,sigma=0.401),func = C_RVector)
 
 ```
 
@@ -136,6 +102,7 @@ dessinSol(parms = c(alpha=0.17,beta=0.0242,gamma=0.02928,sigma=0.401),func = C_R
 
 c) Même si vous n'obtenez pas un modèle qui s'adapte très bien aux données, expliquez brièvement comment vous pensez que les différents modèles que vous obtenez peuvent aider à rejeter (ou non) l'hypothèse proposée par ce chercheur.
 
+L'hypothese que la relation entre les deux espèces bactériennes est une relation consommateur-ressource peut etre soutenus puisque le modele correpond à 96,4% pour la population ressource(*bogustonia proii*) et à 95,5% pour la population consomateur(*aleastonia predatora*). Cela implique qu'il est possible d'expliquer >95% de leurs tailles de populations avec le taux de changement de la population *bogustonia proii*, le taux de consommation de *bogustonia proii* par *aleastonia predatora*, un taux de transformation de la consommation d'une ressource en nouveau consommateur et le taux de changement de *aleastonia predatora*.
 
 ***
 
@@ -144,5 +111,7 @@ c) Même si vous n'obtenez pas un modèle qui s'adapte très bien aux données, 
 d) Après avoir étudié les données en utilisant le modèle ressource-consommateur à la question précédent, proposez une nouvelle expérience qui aiderait à donner des réponses plus précises sur les facteurs générant le comportement périodique trouvé pour les deux espèces bactériennes.
 
 Assurez-vous que l'expérience puisse être réalisée dans un délai raisonnable (au maximum 2 semaines).
+
+Il serait interessant de refaire la même expérience, mais de varier le nombre de départ de ressource avec un grand nombre pour voir si le comportement periodique est affecter. Cela permetterais de comfirmer le portrait de phase lier au modele. 
 
 ***
