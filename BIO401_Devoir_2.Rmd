@@ -39,11 +39,12 @@ $\delta$ : Taux de mortalité de *aleastonia predatora*
 
 b) Implémentez le modèle que vous considérez le plus approprié dans R en utilisant les techniques apprises en cours et essayez une série de valeurs différentes pour trouver les meilleures paramètres. Utilisez la corrélation de Pearson pour trouver les paramètres qui correspondent le mieux aux données.
 
-```{r}
+```{r,eval=FALSE}
 #librairie
 library(deSolve)
 
-bact <- read.csv("~/R_projet/BIO401/2Bactéries.csv")
+#bact <- read.csv("~/R_projet/BIO401/2Bactéries.csv")
+bact <- read.csv("~/R/2Bact́eries.csv")
 
 # Créer un nouveau graphique avec la première ligne
 plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "green", 
@@ -208,7 +209,7 @@ metapopGill <- function (col, ext, N, Nini, tmax){
       return(res)
     }
 }
-metapopGill(2,1,10000,1,10)
+metapopGill(3,2,1000,200,10)
 ```
 
 
@@ -220,6 +221,8 @@ Comparer 3 itérations du modèle de métapopulation stochastiques avec le modè
 $N\in\{100,1000,10000, 100000\}$.  Présenter vos résultats dans des graphiques où chaque figure est définit par une valeur différente de $N$.
 
 ***
+
+Quand N est très élevé, la fonction 'metapopGill()' prend beaucoup de temps
 
 ```{r}
 metapopGill2 <- function (col, ext, N, Nini, tmax){
@@ -233,30 +236,26 @@ metapopGill2 <- function (col, ext, N, Nini, tmax){
   #On définit le nombre de parcelles non-occupées
   Nabs <- N - Nini
   
-  #On initie les objets suivants pour le while
+  #On amorce les objets suivant pour la boucle et la simulation
+  tendance <- -1
   t <- 0
   tevol <- 0
   Nevol <- Nini
-  
-  #Cette boucle while roule tant que Nocc n'est pas nul et tant que t est sous tmax
+  #boucle tournant pour toute la simulation
   while (t<=tmax & Nocc>0){
     
     #on définit le vecteur avec les taux d'évènements
     a <- c(col*Nocc*(1-(Nocc/N)), ext*Nocc)
+    #a <- c(col,ext)
     
     #on définit le taux global d'évènement
     a0 <- sum(a)
     
-    #On initie les objets suivants pour l'intérieur de la boucle d'un pas de temps
-    #temps depuis le début du pas de temps
+    #on compile ici 10 évènements avant d'actualiser Nocc
     tt <- 0
-    #nombre de colonisations pendant le pas de temps
     cols <- 0
-    #nombre d'extinction pendant le pas de temps
     exts <- 0
-    
-    #boucle qui roule pour effectuer tous les évènements dans le pas de temps
-    while(tt<1){
+    for(i in 1:10){
       #on définit u stochastiquement
       u <- runif(1)
       
@@ -264,25 +263,22 @@ metapopGill2 <- function (col, ext, N, Nini, tmax){
       te <- 1/a0 *log(1/u)
       tt <- tt+te
       
-      #on détermine stochastiquement quel évènement se produira
+      #on détermine stochastiquement quels évènement se produira
       e <- runif(1,0,a0)
       
-      #on détermine si c'est une colonisation ou une extinction et on ajuste cols et exts
       if (e<a[1]){
         cols <- cols + 1
       } else {
         exts <- exts + 1
       }
     }
-    #on met à jour Nocc avec les colonisations et les extinctions
+    #on met à jour Nocc et on poursuit la série temporelle
     Nocc <- Nocc + cols - exts
-    #on met à jour le temps
-    t <- t+1
-    #on ajoute à la série temporelle
+    t <- t+tt
     Nevol <- c(Nevol,Nocc)
     tevol <- c(tevol,t)
   }
-  #output si la population
+  #output quand la simulation arrive à tmax
   if(Nocc>0){
     pas <- length(Nevol)
     fin <- round(pas*0.25,0)
@@ -296,6 +292,7 @@ metapopGill2 <- function (col, ext, N, Nini, tmax){
                collapse = "")
     return(res)
   } else {
+    #output si la population crash avant tmax
     data <- as.data.frame(cbind(tevol,Nevol/N))
     print(length(tevol))
     plot(data[,1],data[,2],type = "l",
@@ -306,29 +303,45 @@ metapopGill2 <- function (col, ext, N, Nini, tmax){
     return(res)
   }
 }
-
-#un exemple
-metapopGill(3.3,1.4,1000,200,100)
+metapopGill2(3,2,1000,200,10)
 ```
 
 ### Résultat pour $N=100$ 
 
 ```{r}
+set.seed(102)
 metapopGill(2,1,100,1,20)
 ```
 
 
 ### Résultat pour $N=1000$
 
+```{r}
+set.seed(102)
+metapopGill(2,1,1000,1,20)
+```
+
 ### Résultat pour $N=10000$
 
+```{r}
+set.seed(102)
+metapopGill(2,1,10000,1,20)
+```
+
 ### Résultat pour $N=100000$
+
+```{r}
+set.seed(102)
+metapopGill2(2,1,100000,1,20)
+```
 
 ***
 
 ## Question 4 (2 points)
 
 Expliquer brièvement comment la taille de la population totale ($N$) influence la dynamique stochastique du modèle de métapopulation.  
+
+Il semble que l'augmentation du nombre de patch ($N$) sans changer le nombre de parcelles intialement colonisées allonge la durée de la période de transition, en plus d'aplatir la courbe en début de simulation. L'équilibre est le même, mais prend plus de temps à atteindre
 
 ***
 
