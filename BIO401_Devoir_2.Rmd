@@ -39,12 +39,12 @@ $\delta$ : Taux de mortalité de *aleastonia predatora*
 
 b) Implémentez le modèle que vous considérez le plus approprié dans R en utilisant les techniques apprises en cours et essayez une série de valeurs différentes pour trouver les meilleures paramètres. Utilisez la corrélation de Pearson pour trouver les paramètres qui correspondent le mieux aux données.
 
-```{r,eval=FALSE}
+```{r}
 #librairie
 library(deSolve)
 
 #bact <- read.csv("~/R_projet/BIO401/2Bactéries.csv")
-bact <- read.csv("~/R/2Bact́eries.csv")
+bact <- read.csv("~/R/2bacteries.csv")
 
 # Créer un nouveau graphique avec la première ligne
 plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "green", 
@@ -184,31 +184,34 @@ metapopGill <- function (col, ext, N, Nini, tmax){
     tevol <- c(tevol,t)
       
   }
+  if(Nocc!=0){
     #Pour calculer l'équilibre simulé à partir du dernier quartile de temps
-    if(Nocc!=0){
     pas <- length(Nevol)
     fin <- round(pas*0.25,0)
     tendance <- round(mean(tail(Nevol,fin)))
-  #}
-  data <- as.data.frame(cbind(tevol,Nevol/N))
-  print(length(tevol))
-  plot(data[,1],data[,2],type = "l",
-       xlab="t",
-       ylab="Proportion des parcelles occupées")
-  res<-paste(c("la fonction tend vers ",tendance," parcelles occupées, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
-             collapse = "")
-  return(res)
-    } else {
-      data <- as.data.frame(cbind(tevol,Nevol/N))
+  
+    #imprime le nombre d'étapes effectuées
+    print(length(tevol))
+    
+    #on affiche une courbe de la simulation
+    plot(tevol,Nevol/N,type = "l",
+         xlab="t",
+         ylab="Proportion des parcelles occupées")
+    res<-paste(c("la fonction tend vers ",tendance," parcelles occupées, l'équilibre théorique est à   ",round(theo)," parcelles occupées"),collapse = "")
+    return(res)
+    } else { #dans le cas où la métapopulation s'éteint avant tmax
+      #imprime le nombre d'étapes effectuées
       print(length(tevol))
-      plot(data[,1],data[,2],type = "l",
+      
+      #on affiche une courbe de la simulation
+      plot(tevol,Nevol/N,type = "l",
            xlab="t",
            ylab="Proportion des parcelles occupées")
-      res<-paste(c("La métapopulation s'effondre, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
-                 collapse = "")
+      res<-paste(c("La métapopulation s'effondre, l'équilibre théorique est à ",round(theo)," parcelles occupées"),collapse = "")
       return(res)
     }
 }
+#un exemple
 metapopGill(3,2,1000,200,10)
 ```
 
@@ -251,7 +254,7 @@ metapopGill2 <- function (col, ext, N, Nini, tmax){
     #on définit le taux global d'évènement
     a0 <- sum(a)
     
-    #on compile ici 10 évènements avant d'actualiser Nocc
+    #on réinitialise les colonisations et extinctions
     tt <- 0
     cols <- 0
     exts <- 0
@@ -279,13 +282,15 @@ metapopGill2 <- function (col, ext, N, Nini, tmax){
     tevol <- c(tevol,t)
   }
   #output quand la simulation arrive à tmax
-  if(Nocc>0){
+  if(Nocc>0){ 
+    #on calcule l'équlibre à partir du dernier quartile de temps
     pas <- length(Nevol)
     fin <- round(pas*0.25,0)
     tendance <- round(mean(tail(Nevol,fin)))
-    #}
-    data <- as.data.frame(cbind(tevol,Nevol/N))
-    plot(data[,1],data[,2],type = "l",
+    #le nombre d'étapes effectuées
+    print(length(tevol))
+    #on affiche une courbe de la simulation
+    plot(tevol,Nevol/N,type = "l",
          xlab="t",
          ylab="Proportion des parcelles occupées")
     res<-paste(c("la fonction tend vers ",tendance," parcelles occupées, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
@@ -293,9 +298,10 @@ metapopGill2 <- function (col, ext, N, Nini, tmax){
     return(res)
   } else {
     #output si la population crash avant tmax
-    data <- as.data.frame(cbind(tevol,Nevol/N))
+    #le nombre d'étapes effectuées avant le crash
     print(length(tevol))
-    plot(data[,1],data[,2],type = "l",
+    #on affiche une courbe de la simulation
+    plot(tevol,Nevol/N,type = "l",
          xlab="t",
          ylab="Proportion des parcelles occupées")
     res<-paste(c("La métapopulation s'effondre, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
@@ -303,6 +309,7 @@ metapopGill2 <- function (col, ext, N, Nini, tmax){
     return(res)
   }
 }
+#un exemple
 metapopGill2(3,2,1000,200,10)
 ```
 
