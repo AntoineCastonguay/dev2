@@ -22,17 +22,89 @@ Un chercheur impliqué dans le projet pense que la relation entre les deux espè
 
 a) Présenter le modèle que vous souhaitez utiliser. Assurez-vous de bien définir la notation pour le modèle.
 
+#### Modèle Lotka-Volterra entre l'espèce *bogustonia proii* et l'espèce *aleastonia predatora*  
+##### $\frac{dR}{dt} = \alpha R(t) (1 - \frac{R(t)}{K}) - \beta R(t)C(t)$  
+##### $\frac{dC}{dt} = \epsilon \beta R(t)C(t) - \delta C(t)$  
+$R(t)$ : Taille de la population de *bogustonia proii*  
+$C(t)$ : Taille de la population de *aleastonia predatora*  
+$\alpha$ : Taux de croissance de *bogustonia proii*  
+$K$  : Capacité maximale de support de l'environnement à *bogustonia proii*  
+$\beta$ : Coefficient de la force de l'interaction entre les populations  
+$\epsilon$ : Taux de transformation de la consommation d'une ressource en nouveau consommateur
+$\delta$ : Taux de mortalité de *aleastonia predatora*
+
 ***
 
 ### 8 points
 
 b) Implémentez le modèle que vous considérez le plus approprié dans R en utilisant les techniques apprises en cours et essayez une série de valeurs différentes pour trouver les meilleures paramètres. Utilisez la corrélation de Pearson pour trouver les paramètres qui correspondent le mieux aux données.
 
+```{r}
+#librairie
+library(deSolve)
+
+bact <- read.csv("~/R_projet/BIO401/2Bactéries.csv")
+
+# Créer un nouveau graphique avec la première ligne
+plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "green", 
+     xlab = "Temps", ylab = "Données", main = "Graphique avec deux lignes")
+
+# Ajouter la deuxième ligne
+lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
+
+C_RVector <- function(t, vars, parms){
+  with(as.list(c(parms, vars)), {
+    # Modèle consommateur ressoure
+    dR <- alpha*R*(1-R/2000) - beta*R*C # dR/dt
+    dC <- (epsilon*beta)*R*C - sigma*C  # dC/dt
+    
+    # Résultat
+    res <- c(dR=dR, dC=dC)
+    return(list(res))
+  })
+}
+
+dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(alpha=0.4,beta=0.2,epsilon=1,sigma=0.91)) {
+  soln <- ode(ic, times, func, parms)
+  
+  correlation_R <- cor(bact$bogustonia_proii, soln[,"R"])
+  correlation_C <- cor(bact$aleastonia_predatora, soln[,"C"])
+  
+  #if(correlation_C > 0.5 & correlation_R > 0.5){
+    print(paste("Ressource :",correlation_R))
+    print(paste("Consomateur :",correlation_C))
+    
+    plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
+         xlab = "Temps", ylab = "Données", 
+         main = paste("R", round(correlation_R,3),
+                      "C", round(correlation_C,3),
+                      "a", parms[1],
+                      "b", parms[2],
+                      "e", parms[3],
+                      "d", parms[4]))
+    
+    # Ajouter la deuxième ligne
+    lines(x = times, y = soln[,"C"], col = "red")
+    lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
+    lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
+  #}
+  
+  
+}
+
+# best res
+dessinSol(parms = c(alpha=0.17,beta=0.0242,epsilon=1.21,sigma=0.401),func = C_RVector)
+
+```
+
+
 ***
 
 ### 1 point
 
 c) Même si vous n'obtenez pas un modèle qui s'adapte très bien aux données, expliquez brièvement comment vous pensez que les différents modèles que vous obtenez peuvent aider à rejeter (ou non) l'hypothèse proposée par ce chercheur.
+
+L'hypothese que la relation entre les deux espèces bactériennes est une relation consommateur-ressource peut être soutenue puisque le modèle correspond à 96,4% pour la population ressource(*bogustonia proii*) et à 95,5% pour la population consomateur(*aleastonia predatora*). Cela implique qu'il est possible d'expliquer >95% de leurs tailles de populations avec le taux de changement de la population *bogustonia proii*, le taux de consommation de *bogustonia proii* par *aleastonia predatora*, un taux de transformation de la consommation d'une ressource en nouveau consommateur et le taux de changement de *aleastonia predatora*.
 
 ***
 
@@ -41,6 +113,8 @@ c) Même si vous n'obtenez pas un modèle qui s'adapte très bien aux données, 
 d) Après avoir étudié les données en utilisant le modèle ressource-consommateur à la question précédent, proposez une nouvelle expérience qui aiderait à donner des réponses plus précises sur les facteurs générant le comportement périodique trouvé pour les deux espèces bactériennes.
 
 Assurez-vous que l'expérience puisse être réalisée dans un délai raisonnable (au maximum 2 semaines).
+
+Il serait interessant de refaire la même expérience, mais de varier de beaucoup le nombre de ressource au départ et d'observer si le comportement periodique est affecté. Cela permetterait de confirmer le portrait de phase lié au modèle. 
 
 ***
 
@@ -61,6 +135,83 @@ Indice : il faut utiliser une boucle `while`.
 
 Note : N'oubliez pas de commenter votre code.
 
+```{r}
+metapopGill <- function (col, ext, N, Nini, tmax){
+  
+  #on définit l'équilibre théorique
+  theo <- (1- ext/col)*N
+  
+  #On définit le nombre de parcelles colonisées
+  Nocc <- Nini
+  
+  #On définit le nombre de parcelles non-occupées
+  Nabs <- N - Nini
+  
+  #on amorce
+  tendance <- -1
+  t <- 0
+  tevol <- 0
+  Nevol <- Nini
+  while (t<tmax & Nocc>0){
+      
+    #on définit le vecteur avec les taux d'évènements
+    a <- c(col*Nocc*(1-(Nocc/N)), ext*Nocc)
+    #a <- c(col,ext)
+      
+    #on définit le taux global d'évènement
+    a0 <- sum(a)
+      
+    #on définit u stochastiquement
+    u <- runif(1)
+      
+    #on calcule le temps t au prochain évènement
+    te <- 1/a0 *log(1/u)
+    t <- t+te
+      
+    #on détermine stochastiquement quels évènement se produira
+    e <- runif(1,0,a0)
+
+    if (e<a[1]){
+      Nocc <- Nocc+1
+      Nabs <- Nabs-1
+    } else {
+      Nabs <- Nabs+1
+      Nocc <- Nocc-1
+    }
+    #on fabrique la série temporelle
+    Nevol <- c(Nevol,Nocc)
+    tevol <- c(tevol,t)
+      
+  }
+    #Pour calculer l'équilibre simulé à partir du dernier quartile de temps
+    if(Nocc!=0){
+    pas <- length(Nevol)
+    fin <- round(pas*0.25,0)
+    tendance <- round(mean(tail(Nevol,fin)))
+  #}
+  data <- as.data.frame(cbind(tevol,Nevol/N))
+  print(length(tevol))
+  plot(data[,1],data[,2],type = "l",
+       xlab="t",
+       ylab="Proportion des parcelles occupées")
+  res<-paste(c("la fonction tend vers ",tendance," parcelles occupées, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
+             collapse = "")
+  return(res)
+    } else {
+      data <- as.data.frame(cbind(tevol,Nevol/N))
+      print(length(tevol))
+      plot(data[,1],data[,2],type = "l",
+           xlab="t",
+           ylab="Proportion des parcelles occupées")
+      res<-paste(c("La métapopulation s'effondre, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
+                 collapse = "")
+      return(res)
+    }
+}
+metapopGill(2,1,10000,1,10)
+```
+
+
 ***
 
 ## Question 3 (10 points)  
@@ -70,7 +221,102 @@ $N\in\{100,1000,10000, 100000\}$.  Présenter vos résultats dans des graphiques
 
 ***
 
-### Résultat pour $N=100$
+```{r}
+metapopGill2 <- function (col, ext, N, Nini, tmax){
+  
+  #on définit l'équilibre théorique
+  theo <- (1- ext/col)*N
+  
+  #On définit le nombre de parcelles colonisées
+  Nocc <- Nini
+  
+  #On définit le nombre de parcelles non-occupées
+  Nabs <- N - Nini
+  
+  #On initie les objets suivants pour le while
+  t <- 0
+  tevol <- 0
+  Nevol <- Nini
+  
+  #Cette boucle while roule tant que Nocc n'est pas nul et tant que t est sous tmax
+  while (t<=tmax & Nocc>0){
+    
+    #on définit le vecteur avec les taux d'évènements
+    a <- c(col*Nocc*(1-(Nocc/N)), ext*Nocc)
+    
+    #on définit le taux global d'évènement
+    a0 <- sum(a)
+    
+    #On initie les objets suivants pour l'intérieur de la boucle d'un pas de temps
+    #temps depuis le début du pas de temps
+    tt <- 0
+    #nombre de colonisations pendant le pas de temps
+    cols <- 0
+    #nombre d'extinction pendant le pas de temps
+    exts <- 0
+    
+    #boucle qui roule pour effectuer tous les évènements dans le pas de temps
+    while(tt<1){
+      #on définit u stochastiquement
+      u <- runif(1)
+      
+      #on calcule le temps t au prochain évènement
+      te <- 1/a0 *log(1/u)
+      tt <- tt+te
+      
+      #on détermine stochastiquement quel évènement se produira
+      e <- runif(1,0,a0)
+      
+      #on détermine si c'est une colonisation ou une extinction et on ajuste cols et exts
+      if (e<a[1]){
+        cols <- cols + 1
+      } else {
+        exts <- exts + 1
+      }
+    }
+    #on met à jour Nocc avec les colonisations et les extinctions
+    Nocc <- Nocc + cols - exts
+    #on met à jour le temps
+    t <- t+1
+    #on ajoute à la série temporelle
+    Nevol <- c(Nevol,Nocc)
+    tevol <- c(tevol,t)
+  }
+  #output si la population
+  if(Nocc>0){
+    pas <- length(Nevol)
+    fin <- round(pas*0.25,0)
+    tendance <- round(mean(tail(Nevol,fin)))
+    #}
+    data <- as.data.frame(cbind(tevol,Nevol/N))
+    plot(data[,1],data[,2],type = "l",
+         xlab="t",
+         ylab="Proportion des parcelles occupées")
+    res<-paste(c("la fonction tend vers ",tendance," parcelles occupées, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
+               collapse = "")
+    return(res)
+  } else {
+    data <- as.data.frame(cbind(tevol,Nevol/N))
+    print(length(tevol))
+    plot(data[,1],data[,2],type = "l",
+         xlab="t",
+         ylab="Proportion des parcelles occupées")
+    res<-paste(c("La métapopulation s'effondre, l'équilibre théorique est à ",round(theo)," parcelles occupées"),
+               collapse = "")
+    return(res)
+  }
+}
+
+#un exemple
+metapopGill(3.3,1.4,1000,200,100)
+```
+
+### Résultat pour $N=100$ 
+
+```{r}
+metapopGill(2,1,100,1,20)
+```
+
 
 ### Résultat pour $N=1000$
 
