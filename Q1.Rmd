@@ -1,9 +1,11 @@
 ---
 title: "Devoir 2"
-author: "Amigo team"
+author: "Votre noms d'équipe"
 date: "13/03/2024"
 output: html_document
 ---
+
+# À remettre sur Moodle au plus tard le 27 mars 2024 avant le début du cours. 
 
 ## Question 1 
 ### Mise en contexte
@@ -46,7 +48,7 @@ bact <- read.csv("2Bactéries.csv")
 
 # Créer un nouveau graphique avec la ligne bogustonia proii
 plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "green", 
-     xlab = "Temps", ylab = "Données", main = "Graphique avec deux lignes")
+     xlab = "Temps", ylab = "Nb individus", main = "Données bruts des populations de bogustonia proii et aleastonia predatora")
 
 # Ajouter la ligne aleastonia predatora
 lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
@@ -74,16 +76,16 @@ dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(
   correlation_R <- cor(bact$bogustonia_proii, soln[,"R"])
   correlation_C <- cor(bact$aleastonia_predatora, soln[,"C"])
   
-  # Créer un nouveau graphique avec la ligne du model bogustonia proii
+  # Créer un nouveau graphique avec la ligne du modele bogustonia proii
   plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
        xlab = "Temps", ylab = "Données", 
        main = "Comparaison du modèle avec les données bruts")
   
   # Ajouter la ligne du modele aleastonia predatora
   lines(x = times, y = soln[,"C"], col = "red")
-  # Ajouter la ligne bogustonia proii
+  # Ajouter la ligne brute bogustonia proii
   lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
-  # Ajouter la ligne aleastonia predatora
+  # Ajouter la ligne brute aleastonia predatora
   lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
   
   # presentation de parammetre et correlation
@@ -97,7 +99,6 @@ dessinSol(parms = c(alpha=0.17,beta=0.0242,epsilon=1.21,delta=0.401),func = C_RV
 
 ```
 
-
 ***
 
 ### 1 point
@@ -105,7 +106,7 @@ dessinSol(parms = c(alpha=0.17,beta=0.0242,epsilon=1.21,delta=0.401),func = C_RV
 c) Même si vous n'obtenez pas un modèle qui s'adapte très bien aux données, expliquez brièvement comment vous pensez que les différents modèles que vous obtenez peuvent aider à rejeter (ou non) l'hypothèse proposée par ce chercheur.
 
 L'hypothèse que la relation entre les deux espèces bactériennes est une relation consommateur-ressource peut être soutenue puisque le modèle correspond à 96,4% pour la population ressource(*bogustonia proii*) et à 95,5% pour la population consommatrice(*aleastonia predatora*).  
-Sinon, le modèle utilisé prend en compte seulement la mortalité de la proie due à la prédation. De même pour les prédateurs, dont l'ajout de nouveaux individus est uniquement lié à la consommation de proie. Ainsi, toute diminution de la population des proies ou toute augmentation de la population des prédateurs dont les données brutes et le modèle se superposent confirme la relation consommateur-ressource entre des deux espèces.  
+Sinon, le modèle utilisé prend en compte seulement la mortalité de la proie due à la prédation. De même pour les prédateurs, dont l'ajout de nouveaux individus est uniquement lié à la consommation de proie. Ainsi, toute diminution de la population des proies ou toute augmentation de la population des prédateurs dont les données brutes et le modèle se superposent confirme la relation consommateur-ressource entre des deux espèces. 
 
 ***
 
@@ -116,5 +117,3 @@ d) Après avoir étudié les données en utilisant le modèle ressource-consomma
 Assurez-vous que l'expérience puisse être réalisée dans un délai raisonnable (au maximum 2 semaines).
 
 Il serait intéressant de refaire la même expérience, mais de varier le nombre de départ de ressource avec un grand nombre ou le nombre de consommateurs pour voir si le comportement périodique est affecté. Cela permettrait de confirmer le portrait de phase lié au modèle.  
-
-***
