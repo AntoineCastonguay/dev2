@@ -43,21 +43,22 @@ b) Implémentez le modèle que vous considérez le plus approprié dans R en uti
 #librairie
 library(deSolve)
 
-#bact <- read.csv("~/R_projet/BIO401/2Bactéries.csv")
-bact <- read.csv("~/R/2bacteries.csv")
+# lecture des données
+bact <- read.csv("2Bactéries.csv")
 
-# Créer un nouveau graphique avec la première ligne
+# Créer un nouveau graphique avec la ligne bogustonia proii
 plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "green", 
-     xlab = "Temps", ylab = "Nb individus", main = "Données brut de la taille de population de bogustonia proii et aleastonia predatora")
+     xlab = "Temps", ylab = "Nb individus", main = "Données bruuts des population de bogustonia proii et aleastonia predatora")
 
-# Ajouter la deuxième ligne
+# Ajouter la ligne aleastonia predatora
 lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
 
+# Fonction du modele consommateur ressource
 C_RVector <- function(t, vars, parms){
   with(as.list(c(parms, vars)), {
     # Modèle consommateur ressoure
     dR <- alpha*R*(1-R/2000) - beta*R*C # dR/dt
-    dC <- (epsilon*beta)*R*C - sigma*C  # dC/dt
+    dC <- (epsilon*beta)*R*C - delta*C  # dC/dt
     
     # Résultat
     res <- c(dR=dR, dC=dC)
@@ -65,39 +66,38 @@ C_RVector <- function(t, vars, parms){
   })
 }
 
-dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(alpha=0.4,beta=0.2,epsilon=1,sigma=0.91)) {
+# Fonction pour dessiner la solution
+dessinSol <- function(ic=c(R=25,C=20), times=bact$temps,func=C_RVector, parms=c(alpha=0.4,beta=0.2,epsilon=1,delta=0.91)) {
+  
+  # Applique le modele avec les parammetres
   soln <- ode(ic, times, func, parms)
   
+  # Trouve les correlations avec du modele
   correlation_R <- cor(bact$bogustonia_proii, soln[,"R"])
   correlation_C <- cor(bact$aleastonia_predatora, soln[,"C"])
   
-  #if(correlation_C > 0.5 & correlation_R > 0.5){
-    print(paste("Ressource :",correlation_R))
-    print(paste("Consomateur :",correlation_C))
-    
-    plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
-         xlab = "Temps", ylab = "Données", 
-         main = paste("R", round(correlation_R,3),
-                      "C", round(correlation_C,3),
-                      "a", parms[1],
-                      "b", parms[2],
-                      "e", parms[3],
-                      "d", parms[4]))
-    
-    # Ajouter la deuxième ligne
-    lines(x = times, y = soln[,"C"], col = "red")
-    lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
-    lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
-  #}
+  # Créer un nouveau graphique avec la ligne du modele bogustonia proii
+  plot(x = times, y = soln[,"R"], type = "l", col = "blue", 
+       xlab = "Temps", ylab = "Données", 
+       main = "Comparaison du modèle avec les données bruts")
   
+  # Ajouter la ligne du modele aleastonia predatora
+  lines(x = times, y = soln[,"C"], col = "red")
+  # Ajouter la ligne brute bogustonia proii
+  lines(x = bact$temps, y = bact$bogustonia_proii, col = "green")
+  # Ajouter la ligne brute aleastonia predatora
+  lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
   
+  # presentation de parammetre et correlation
+  print(paste("alpha =", parms[1],"beta =", parms[2],"epsilon =", parms[3],"delta =", parms[4]))
+  print(paste("Ressource :",round(correlation_R,4)))
+  print(paste("Consomateur :",round(correlation_C,4)))
 }
 
-# best res
-dessinSol(parms = c(alpha=0.17,beta=0.0242,epsilon=1.21,sigma=0.401),func = C_RVector)
+# best resultat
+dessinSol(parms = c(alpha=0.17,beta=0.0242,epsilon=1.21,delta=0.401),func = C_RVector)
 
 ```
-
 
 ***
 
@@ -105,7 +105,8 @@ dessinSol(parms = c(alpha=0.17,beta=0.0242,epsilon=1.21,sigma=0.401),func = C_RV
 
 c) Même si vous n'obtenez pas un modèle qui s'adapte très bien aux données, expliquez brièvement comment vous pensez que les différents modèles que vous obtenez peuvent aider à rejeter (ou non) l'hypothèse proposée par ce chercheur.
 
-L'hypothese que la relation entre les deux espèces bactériennes est une relation consommateur-ressource peut être soutenue puisque le modèle correspond à 96,4% pour la population ressource(*bogustonia proii*) et à 95,5% pour la population consomateur(*aleastonia predatora*). Cela implique qu'il est possible d'expliquer >95% de leurs tailles de populations avec le taux de changement de la population *bogustonia proii*, le taux de consommation de *bogustonia proii* par *aleastonia predatora*, un taux de transformation de la consommation d'une ressource en nouveau consommateur et le taux de changement de *aleastonia predatora*.
+L'hypothèse que la relation entre les deux espèces bactériennes est une relation consommateur-ressource peut être soutenue puisque le modèle correspond à 96,4% pour la population ressource(*bogustonia proii*) et à 95,5% pour la population consommatrice(*aleastonia predatora*).  
+Sinon, le modèle utilisé prend en compte seulement la mortalité de la proie due à la prédation. De même pour les prédateurs, dont l'ajout de nouveaux individus est uniquement lié à la consommation de proie. Ainsi, toute diminution de la population des proies ou toute augmentation de la population des prédateurs dont les données brutes et le modèle se superposent confirme la relation consommateur-ressource entre des deux espèces. 
 
 ***
 
@@ -115,7 +116,7 @@ d) Après avoir étudié les données en utilisant le modèle ressource-consomma
 
 Assurez-vous que l'expérience puisse être réalisée dans un délai raisonnable (au maximum 2 semaines).
 
-Il serait interessant de refaire la même expérience, mais de varier de beaucoup le nombre de ressource au départ et d'observer si le comportement periodique est affecté. Cela permetterait de confirmer le portrait de phase lié au modèle. 
+Il serait intéressant de refaire la même expérience, mais de varier le nombre de départ de ressource avec un grand nombre ou le nombre de consommateurs pour voir si le comportement périodique est affecté. Cela permettrait de confirmer le portrait de phase lié au modèle.  
 
 ***
 
