@@ -48,7 +48,7 @@ bact <- read.csv("~/R/2bacteries.csv")
 
 # Créer un nouveau graphique avec la première ligne
 plot(x = bact$temps, y = bact$bogustonia_proii, type = "l", col = "green", 
-     xlab = "Temps", ylab = "Données", main = "Graphique avec deux lignes")
+     xlab = "Temps", ylab = "Nb individus", main = "Données brut de la taille de population de bogustonia proii et aleastonia predatora")
 
 # Ajouter la deuxième ligne
 lines(x = bact$temps, y = bact$aleastonia_predatora, col = "orange")
